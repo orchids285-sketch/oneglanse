@@ -310,6 +310,14 @@ export default function SchedulePageClient({
 	if (!canConfigureSchedule) {
 		return (
 			<div className="web-page-panel max-w-2xl">
+				<div className="space-y-1">
+					<p className="text-sm text-gray-500 dark:text-gray-400">
+						Local mode supports on-demand runs while your machine is active.
+					</p>
+					<p className="text-sm text-gray-500 dark:text-gray-400">
+						Scheduling is available in the cloud and self-host versions.
+					</p>
+				</div>
 				<div className="flex justify-center pt-3 sm:pt-4">
 					<div className="w-full">
 						<ManualRunView
