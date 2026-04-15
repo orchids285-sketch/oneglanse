@@ -1,0 +1,201 @@
+name: Oneglanse Build
+on:
+  push:
+    branches:
+      - 'feat/no-auth-providers'
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "Dockerfile"
+      - "Dockerfile.agent"
+      - "Dockerfile.postgres"
+      - "packages/db/**"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  validate:
+    name: Typecheck & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm typecheck
+      # - run: pnpm lint
+  changes:
+    name: Detect Changed Areas
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      agent: ${{ steps.filter.outputs.agent }}
+      postgres: ${{ steps.filter.outputs.postgres }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+              - 'packages/db/**'
+              - 'packages/errors/**'
+              - 'packages/services/**'
+              - 'packages/types/**'
+              - 'packages/ui/**'
+              - 'packages/utils/**'
+              - 'Dockerfile'
+              - 'Dockerfile.dockerignore'
+              - '.dockerignore'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - 'tsconfig.json'
+              - '.github/workflows/docker-build.yml'
+            agent:
+              - 'apps/agent/**'
+              - 'packages/db/**'
+              - 'packages/errors/**'
+              - 'packages/services/**'
+              - 'packages/types/**'
+              - 'packages/utils/**'
+              - 'Dockerfile.agent'
+              - 'Dockerfile.agent.dockerignore'
+              - '.dockerignore'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - 'tsconfig.json'
+              - '.github/workflows/docker-build.yml'
+            postgres:
+              - 'Dockerfile.postgres'
+              - 'packages/db/init-scripts/**'
+              - '.github/workflows/docker-build.yml'
+
+  build-web:
+    name: Build Web
+    needs: [validate, changes]
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.web == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/onescope-web
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-,format=short
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}/onescope-web:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_PREFIX }}/onescope-web:buildcache,mode=max
+
+  build-agent:
+    name: Build Agent
+    needs: [validate, changes]
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.agent == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/onescope-agent
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-,format=short
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.agent
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}/onescope-agent:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_PREFIX }}/onescope-agent:buildcache,mode=max
+
+  build-postgres:
+    name: Build Postgres
+    needs: [validate, changes]
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.postgres == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/onescope-postgres
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-,format=short
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.postgres
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.IMAGE_PREFIX }}/onescope-postgres:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_PREFIX }}/onescope-postgres:buildcache,mode=max
