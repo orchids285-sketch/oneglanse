@@ -104,7 +104,9 @@ export default function SourcesPage(): React.JSX.Element {
 			map.set(domain, existing);
 		}
 
-		return [...map.values()].sort((a, b) => b.totalCitations - a.totalCitations);
+		return [...map.values()].sort(
+			(a, b) => b.totalCitations - a.totalCitations,
+		);
 	}, [displayedSources]);
 
 	const metrics = useMemo<SourcePanelMetrics>(() => {
@@ -249,12 +251,11 @@ export default function SourcesPage(): React.JSX.Element {
 		<div className="web-page-wide">
 			<div className="web-page-wide-inner ui-stagger space-y-6 sm:space-y-8">
 				<SectionHeading
-					as="h1"
-					title="Sources Intelligence"
-					description="High-signal view of where model answers are sourced from."
-					className="mb-0 flex-wrap items-center gap-y-4"
-					titleClassName="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100"
-					descriptionClassName="mt-2 text-sm font-normal"
+					as="h2"
+					title="Answer Signals"
+					description="See which domains, URLs, and excerpts are shaping AI model answers across your tracked prompts."
+					titleClassName="text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100"
+					descriptionClassName="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400"
 					trailing={
 						<div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
 							<ExportMenu
