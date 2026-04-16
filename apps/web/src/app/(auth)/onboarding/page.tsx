@@ -111,7 +111,7 @@ export default function FirstWorkspaceOnboardingPage() {
 
 	if (!workspaceId) {
 		return (
-			<div className="flex min-h-screen items-center justify-center">
+			<div className="flex min-h-full items-center justify-center">
 				<p className="text-sm text-muted-foreground">No workspace selected.</p>
 			</div>
 		);
@@ -120,7 +120,7 @@ export default function FirstWorkspaceOnboardingPage() {
 	const isPending = storePrompts.isPending || runAgent.isPending;
 
 	return (
-		<div className="ui-page-enter min-h-screen bg-stone-50 px-4 py-8 dark:bg-neutral-950 sm:px-6 sm:py-10">
+		<div className="ui-page-enter min-h-full bg-stone-50 px-4 py-8 dark:bg-neutral-950 sm:px-6 sm:py-10">
 			<div className="ui-stagger mx-auto w-full min-w-0 max-w-2xl">
 				<Card className={formSurfaceClassName}>
 					<CardHeader className="border-b border-gray-100 bg-white pb-6 dark:border-gray-900 dark:bg-neutral-950">

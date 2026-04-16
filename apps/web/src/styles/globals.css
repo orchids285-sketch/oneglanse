@@ -176,11 +176,11 @@
 
 @layer components {
 	.web-app-shell {
-		@apply flex min-h-svh w-full min-w-0 overflow-hidden bg-stone-50 dark:bg-neutral-950;
+		@apply flex h-svh w-full min-w-0 overflow-hidden bg-stone-50 dark:bg-neutral-950;
 	}
 
 	.web-app-main {
-		@apply relative flex min-h-svh min-w-0 flex-1 flex-col overflow-hidden bg-stone-50/80 dark:bg-neutral-950;
+		@apply relative flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-stone-50/80 dark:bg-neutral-950;
 	}
 
 	.web-app-header {
