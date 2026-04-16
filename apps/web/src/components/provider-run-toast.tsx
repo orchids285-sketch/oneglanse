@@ -69,14 +69,6 @@ export function clearActiveProviderRun(): void {
 	window.dispatchEvent(new Event(ACTIVE_PROVIDER_RUN_EVENT));
 }
 
-function showQueuedRunToast() {
-	toast.loading("Starting analysis run…", {
-		id: PROVIDER_RUN_TOAST_ID,
-		description: "Preparing provider jobs and loading progress.",
-		duration: Number.POSITIVE_INFINITY,
-	});
-}
-
 export function showDisconnectedProvidersToast(args: {
 	disconnectedProviders?: string[];
 }) {
@@ -242,7 +234,6 @@ export function useProviderRunToast(args: {
 
 		if (!response) {
 			displayRef.current = null;
-			showQueuedRunToast();
 			return;
 		}
 
