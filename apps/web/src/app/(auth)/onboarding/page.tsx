@@ -35,11 +35,31 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-const SUGGESTED_PROMPTS = [
+const SUGGESTED_PROMPT_TEMPLATES = [
 	"What are the best alternatives to {brand} for buyers comparing options in this category?",
 	"How does {brand} compare with competitors on pricing, usability, and overall value?",
 	"What are the main reasons customers choose {brand} versus other brands in this market?",
+	"What do customers praise most about {brand}, and what complaints come up most often?",
+	"Which use cases is {brand} best suited for, and where does it fall short?",
+	"How does {brand} stand out in terms of features, service, or customer experience?",
+	"What would make someone switch from a competitor to {brand}?",
+	"How is {brand} positioned in the market compared with similar brands?",
+	"What factors should a buyer consider before choosing {brand}?",
+	"Who is the ideal customer for {brand}, and who may be better served by another option?",
 ];
+
+function shuffle<T>(items: T[]) {
+	const nextItems = [...items];
+	for (let index = nextItems.length - 1; index > 0; index -= 1) {
+		const randomIndex = Math.floor(Math.random() * (index + 1));
+		const currentItem = nextItems[index];
+		const randomItem = nextItems[randomIndex];
+		if (currentItem === undefined || randomItem === undefined) continue;
+		nextItems[index] = randomItem;
+		nextItems[randomIndex] = currentItem;
+	}
+	return nextItems;
+}
 
 export default function FirstWorkspaceOnboardingPage() {
 	const router = useRouter();
@@ -53,6 +73,9 @@ export default function FirstWorkspaceOnboardingPage() {
 	const [isSuggestedPromptsExpanded, setIsSuggestedPromptsExpanded] =
 		useState(true);
 	const [suggestedPromptsHeight, setSuggestedPromptsHeight] = useState(0);
+	const [visibleSuggestedPrompts, setVisibleSuggestedPrompts] = useState<
+		string[]
+	>([]);
 	const inputRef = useRef<HTMLTextAreaElement>(null);
 	const suggestedPromptsRef = useRef<HTMLDivElement>(null);
 
@@ -74,10 +97,18 @@ export default function FirstWorkspaceOnboardingPage() {
 
 	const suggestedPrompts = useMemo(
 		() =>
-			SUGGESTED_PROMPTS.map((p) =>
+			SUGGESTED_PROMPT_TEMPLATES.map((p) =>
 				p.replaceAll("{brand}", brandName || "your brand"),
 			),
 		[brandName],
+	);
+	const availableSuggestedPrompts = useMemo(
+		() =>
+			suggestedPrompts.filter(
+				(prompt) =>
+					!prompts.some((addedPrompt) => addedPrompt.trim() === prompt.trim()),
+			),
+		[suggestedPrompts, prompts],
 	);
 
 	const addPrompt = (value: string) => {
@@ -157,6 +188,29 @@ export default function FirstWorkspaceOnboardingPage() {
 	useEffect(() => {
 		setIsSuggestedPromptsExpanded(prompts.length === 0);
 	}, [prompts.length]);
+
+	useEffect(() => {
+		setVisibleSuggestedPrompts((currentPrompts) => {
+			const stillVisible = currentPrompts.filter((prompt) =>
+				availableSuggestedPrompts.includes(prompt),
+			);
+			const openSlots = Math.max(0, 3 - stillVisible.length);
+			if (openSlots === 0 && stillVisible.length === currentPrompts.length) {
+				return currentPrompts;
+			}
+
+			const remainingPrompts = availableSuggestedPrompts.filter(
+				(prompt) => !stillVisible.includes(prompt),
+			);
+			return [
+				...stillVisible,
+				...shuffle(remainingPrompts).slice(
+					0,
+					Math.min(openSlots, remainingPrompts.length),
+				),
+			];
+		});
+	}, [availableSuggestedPrompts]);
 
 	useEffect(() => {
 		const element = suggestedPromptsRef.current;
@@ -320,23 +374,18 @@ export default function FirstWorkspaceOnboardingPage() {
 									ref={suggestedPromptsRef}
 									className="space-y-2 pt-0.5 xl:space-y-2.5"
 								>
-									{suggestedPrompts.map((prompt) => {
-										const alreadyAdded = prompts.some(
-											(p) => p.trim() === prompt.trim(),
-										);
+									{visibleSuggestedPrompts.map((prompt) => {
 										return (
 											<button
 												key={prompt}
 												type="button"
 												onClick={() => addPrompt(prompt)}
-												disabled={alreadyAdded || isPending}
+												disabled={isPending}
 												className={cn(
 													"group flex w-full rounded-[var(--app-radius)] border border-gray-200/80 bg-white px-3 py-2.5 text-left shadow-[0_2px_8px_-4px_rgba(0,0,0,0.06)] transition duration-150 xl:px-4 xl:py-3",
 													"hover:border-gray-300 hover:shadow-[0_4px_14px_-6px_rgba(0,0,0,0.1)]",
 													"dark:border-gray-800 dark:bg-neutral-950 dark:shadow-[0_2px_8px_-4px_rgba(0,0,0,0.3)]",
 													"dark:hover:border-gray-700 dark:hover:shadow-[0_4px_14px_-6px_rgba(0,0,0,0.4)]",
-													alreadyAdded &&
-														"pointer-events-none cursor-default opacity-40",
 												)}
 											>
 												<div className="flex min-w-0 flex-1 items-center gap-2">
@@ -348,6 +397,12 @@ export default function FirstWorkspaceOnboardingPage() {
 											</button>
 										);
 									})}
+									{visibleSuggestedPrompts.length === 0 && (
+										<div className="rounded-[var(--app-radius)] border border-dashed border-gray-200/80 px-3 py-3 text-[11px] leading-5 text-gray-500 dark:border-gray-800 dark:text-gray-400 xl:px-4 xl:text-[13px] xl:leading-6">
+											All suggested prompts are currently in your list. Remove
+											one to bring it back here.
+										</div>
+									)}
 								</div>
 							</div>
 						</div>

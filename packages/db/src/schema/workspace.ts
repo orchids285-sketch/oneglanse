@@ -1,6 +1,8 @@
+import { AUTH_PROVIDER_LIST } from "@oneglanse/types";
 import { sql } from "drizzle-orm";
 import {
 	index,
+	pgEnum,
 	pgTable,
 	text,
 	timestamp,
@@ -11,6 +13,11 @@ import {
 import z from "zod";
 import { user } from "./auth.js";
 
+export const workspaceEnabledProviderEnum = pgEnum(
+	"workspace_enabled_provider",
+	AUTH_PROVIDER_LIST,
+);
+
 export const workspaces = pgTable("workspaces", {
 	id: varchar("id", { length: 256 }).primaryKey(),
 	name: varchar("name", { length: 256 }).notNull(),
@@ -18,6 +25,7 @@ export const workspaces = pgTable("workspaces", {
 	domain: varchar("domain", { length: 256 }).notNull(),
 	tenantId: varchar("tenant_id", { length: 256 }).notNull(),
 	schedule: varchar("schedule", { length: 64 }),
+	enabledProviders: workspaceEnabledProviderEnum("enabled_providers").array(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	deletedAt: timestamp("deleted_at"),
 });
