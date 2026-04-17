@@ -29,6 +29,7 @@ type ProviderJobPayload = {
 export type SubmitAgentJobResult =
 	| { status: "queued"; jobGroupId: string }
 	| { status: "empty" }
+	| { status: "all-disabled" }
 	| { status: "no-providers"; disconnectedProviders: Provider[] };
 
 export function buildProviderJobId(
@@ -158,14 +159,17 @@ export async function submitAgentJobGroup(args: {
 			getWorkspaceById({ workspaceId }),
 		]);
 		prompts = loadedPrompts;
-		allowedProviders =
-			workspace.enabledProviders && workspace.enabledProviders.length > 0
-				? PROVIDER_LIST.filter((provider) =>
-						workspace.enabledProviders?.includes(
-							getAuthProviderForRuntimeProvider(provider),
-						),
-					)
-				: [...PROVIDER_LIST];
+		const { enabledProviders } = workspace;
+		if (enabledProviders !== null && enabledProviders.length === 0) {
+			return { status: "all-disabled" };
+		}
+		allowedProviders = enabledProviders
+			? PROVIDER_LIST.filter((provider) =>
+					enabledProviders.includes(
+						getAuthProviderForRuntimeProvider(provider),
+					),
+				)
+			: [...PROVIDER_LIST];
 	} catch (err) {
 		throw new Error(`failed to load workspace prompts: ${toErrorMessage(err)}`);
 	}

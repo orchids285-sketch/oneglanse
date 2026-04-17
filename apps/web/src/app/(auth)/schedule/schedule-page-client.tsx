@@ -7,8 +7,8 @@ import {
 } from "@/components/forms/auth-form-chrome";
 import {
 	clearActiveProviderRun,
+	handleAgentRunResult,
 	persistActiveProviderRun,
-	showDisconnectedProvidersToast,
 } from "@/components/provider-run-toast";
 import { useSafeSearchParams } from "@/lib/navigation/use-safe-search-params";
 import { useProviderConnections } from "@/lib/provider-connections/client";
@@ -452,17 +452,14 @@ export default function SchedulePageClient({
 				toast.warning("No prompts configured for this workspace.");
 				return;
 			}
-			if (result.status === "no-providers") {
-				clearActiveProviderRun();
-				setIsRunning(false);
-				showDisconnectedProvidersToast({
-					disconnectedProviders:
-						result.disconnectedProviders.length > 0
-							? result.disconnectedProviders
-							: providerConnectionsQuery.data?.cards
-									.filter((card) => !card.status.connected)
-									.map((card) => card.displayName),
-				});
+			if (
+				!handleAgentRunResult(result, {
+					onDone: () => setIsRunning(false),
+					providerDisplayNames: providerConnectionsQuery.data?.cards
+						.filter((card) => !card.status.connected)
+						.map((card) => card.displayName),
+				})
+			) {
 				return;
 			}
 			clearActiveProviderRun();

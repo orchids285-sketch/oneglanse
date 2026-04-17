@@ -234,10 +234,9 @@ export function ProviderConnectionsPanel(props: {
 
 							<Button
 								variant="ghost"
-								size="icon"
 								className={cn(
 									formSecondaryButtonClassName,
-									"size-8 shrink-0 rounded-[var(--app-radius)] border border-gray-200/80 bg-white/85 p-0 text-gray-600 sm:size-8.5 dark:border-gray-700 dark:bg-white/5 dark:text-gray-300 lg:size-9 xl:size-10",
+									"gap-1.5 border border-gray-200/80 bg-white/85 text-gray-600 dark:border-gray-700 dark:bg-white/5 dark:text-gray-300",
 								)}
 								onClick={() => resetAllMutation.mutate()}
 								disabled={
@@ -245,7 +244,6 @@ export function ProviderConnectionsPanel(props: {
 									resetAllMutation.isPending ||
 									isAnyConnectionPending
 								}
-								aria-label="Reset all provider sessions"
 								title="Reset all provider sessions"
 							>
 								{resetAllMutation.isPending ? (
@@ -253,6 +251,7 @@ export function ProviderConnectionsPanel(props: {
 								) : (
 									<RotateCcw className="h-3.5 w-3.5" />
 								)}
+								Reset all
 							</Button>
 						</div>
 
@@ -327,7 +326,7 @@ export function ProviderConnectionsPanel(props: {
 				</p>
 			) : null}
 
-			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+			<div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-3">
 				{cards.map((card) => {
 					const status = card.status;
 					const { isPendingForProvider, isPendingConnect, isPendingRefresh } =
@@ -354,11 +353,10 @@ export function ProviderConnectionsPanel(props: {
 						<div
 							key={card.provider}
 							className={cn(
-								"group relative overflow-hidden px-5 py-5 transition-[background-color,box-shadow,border-color,transform] duration-200 ease-out hover:-translate-y-0.5 sm:px-6 sm:py-5",
+								"group relative overflow-hidden px-4 py-4 transition-[background-color,box-shadow,border-color,transform] duration-200 ease-out hover:-translate-y-0.5 sm:px-5 sm:py-5",
 								getConnectionCardClasses(card),
 							)}
 						>
-							<div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-300/70 to-transparent dark:via-white/10" />
 							<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 								<div
 									className={cn(
@@ -370,7 +368,7 @@ export function ProviderConnectionsPanel(props: {
 										<img
 											src={getModelFavicon(primaryProvider)}
 											alt={cardTitle}
-											className="h-7 w-7 shrink-0 rounded-[var(--app-radius)] sm:h-8 sm:w-8"
+											className="h-6 w-6 shrink-0 rounded-[var(--app-radius)] sm:h-7 sm:w-7"
 										/>
 
 										<div className="min-w-0">
@@ -378,12 +376,12 @@ export function ProviderConnectionsPanel(props: {
 												<span className="text-[10px] font-medium uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500">
 													Provider
 												</span>
-												<p className="truncate text-sm font-semibold tracking-[-0.02em] text-gray-900 sm:text-base dark:text-gray-100">
+												<p className="truncate text-sm font-semibold tracking-[-0.02em] text-gray-900 dark:text-gray-100">
 													{cardTitle}
 												</p>
 											</div>
 											{isConnected && !statusMessage ? (
-												<div className="mt-2 inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+												<div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
 													<CheckCircle2 className="h-3.5 w-3.5" />
 													Ready for prompt runs
 												</div>
@@ -434,10 +432,7 @@ export function ProviderConnectionsPanel(props: {
 										<Button
 											variant="ghost"
 											size="icon"
-											className={cn(
-												formSecondaryButtonClassName,
-												"size-11 rounded-[var(--app-radius)] p-0 text-gray-500 dark:text-gray-300",
-											)}
+											className="size-9 shrink-0 rounded-full border border-gray-200/80 bg-white p-0 text-gray-500 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_18px_-14px_rgba(15,23,42,0.12)] transition-all hover:bg-stone-100 hover:text-gray-950 hover:shadow-[0_1px_2px_rgba(15,23,42,0.08),0_16px_30px_-16px_rgba(15,23,42,0.22)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-300 dark:shadow-[0_1px_2px_rgba(0,0,0,0.14),0_10px_24px_-16px_rgba(0,0,0,0.4)] dark:hover:bg-gray-800 dark:hover:text-gray-100 dark:hover:shadow-[0_1px_2px_rgba(0,0,0,0.18),0_16px_30px_-16px_rgba(0,0,0,0.5)]"
 											onClick={() =>
 												providerActionMutation.mutate({
 													provider: card.provider,
@@ -449,9 +444,9 @@ export function ProviderConnectionsPanel(props: {
 											title={`Reconnect ${cardTitle}`}
 										>
 											{status.connecting || isPendingRefresh ? (
-												<Loader2 className="h-4 w-4 animate-spin" />
+												<Loader2 className="h-3.5 w-3.5 animate-spin" />
 											) : (
-												<RotateCw className="h-4 w-4" />
+												<RotateCw className="h-3.5 w-3.5" />
 											)}
 										</Button>
 									) : null}

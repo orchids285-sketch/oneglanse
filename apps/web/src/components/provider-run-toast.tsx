@@ -69,7 +69,15 @@ export function clearActiveProviderRun(): void {
 	window.dispatchEvent(new Event(ACTIVE_PROVIDER_RUN_EVENT));
 }
 
-export function showDisconnectedProvidersToast(args: {
+function showAllProvidersDisabledToast() {
+	toast.error("All providers are disabled.", {
+		id: PROVIDER_RUN_TOAST_ID,
+		description:
+			"Enable at least one provider on the Providers page before running prompts.",
+	});
+}
+
+function showDisconnectedProvidersToast(args: {
 	disconnectedProviders?: string[];
 }) {
 	const providers = (args.disconnectedProviders ?? [])
@@ -84,6 +92,56 @@ export function showDisconnectedProvidersToast(args: {
 		id: PROVIDER_RUN_TOAST_ID,
 		description,
 	});
+}
+
+/**
+ * Handles all non-success agent run result states with appropriate toasts.
+ * Call this after every `api.agent.run.mutateAsync` call.
+ *
+ * Returns `true` if the run was queued successfully (caller should proceed).
+ * Returns `false` for all error/non-success states (caller should stop).
+ */
+export function handleAgentRunResult(
+	result: {
+		status: string;
+		jobId?: string | null;
+		disconnectedProviders?: string[];
+	},
+	options: {
+		/** Called when the result is not a successful queue (after showing any toast). */
+		onDone: () => void;
+		/** Provider display names for the disconnected toast fallback. */
+		providerDisplayNames?: string[];
+	},
+): result is { status: "queued"; jobId: string } {
+	const { onDone, providerDisplayNames } = options;
+
+	if (result.status === "all-disabled") {
+		clearActiveProviderRun();
+		showAllProvidersDisabledToast();
+		onDone();
+		return false;
+	}
+
+	if (result.status === "no-providers") {
+		clearActiveProviderRun();
+		showDisconnectedProvidersToast({
+			disconnectedProviders:
+				(result.disconnectedProviders ?? []).length > 0
+					? result.disconnectedProviders
+					: providerDisplayNames,
+		});
+		onDone();
+		return false;
+	}
+
+	if (result.status !== "queued" || !result.jobId) {
+		clearActiveProviderRun();
+		onDone();
+		return false;
+	}
+
+	return true;
 }
 
 function ProviderRunToastCard({

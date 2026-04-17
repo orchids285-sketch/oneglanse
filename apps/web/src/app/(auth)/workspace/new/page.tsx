@@ -8,7 +8,9 @@ import {
 	formSurfaceClassName,
 } from "@/components/forms/auth-form-chrome";
 import { authClient } from "@/lib/auth/auth-client";
+import { env } from "@/env";
 import { api } from "@/trpc/react";
+import { resolveAppMode } from "@oneglanse/types";
 import {
 	Button,
 	Card,
@@ -93,7 +95,14 @@ export default function NewWorkspace() {
 			toast.success("Workspace created successfully!");
 			router.refresh();
 			if (isFirstWorkspace) {
-				router.replace(`/onboarding?workspace=${workspace.id}`);
+				const appMode = resolveAppMode(env.NEXT_PUBLIC_ONEGLANSE_APP_MODE);
+				if (appMode === "local") {
+					router.replace(
+						`/providers?next=/onboarding?workspace=${workspace.id}`,
+					);
+				} else {
+					router.replace(`/onboarding?workspace=${workspace.id}`);
+				}
 			} else {
 				router.replace(`/dashboard?workspace=${workspace.id}`);
 			}
