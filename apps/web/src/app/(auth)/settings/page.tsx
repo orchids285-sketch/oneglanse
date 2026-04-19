@@ -362,7 +362,7 @@ export default function SettingsPage() {
 						</DialogDescription>
 					</DialogHeader>
 
-					<div className={cn(formDialogBodyClassName, "pt-2 sm:pt-2.25 lg:pt-2.5")}>
+					<div className="px-4 sm:px-4.5 lg:px-5">
 						<div className="rounded-[var(--app-radius)] border border-amber-200 bg-amber-50 px-3 py-3 dark:border-amber-900/60 dark:bg-amber-950/20">
 							<p className="text-xs leading-5 text-amber-800 dark:text-amber-300">
 								If you are the sole owner of any organization, that organization
@@ -370,7 +370,9 @@ export default function SettingsPage() {
 								your account.
 							</p>
 						</div>
+					</div>
 
+					<div className={formDialogBodyClassName}>
 						<div className="space-y-2">
 							<Label
 								htmlFor="delete-confirm-email"
