@@ -154,7 +154,7 @@ export function ProviderRunStatusCard(props: {
 					<div className="mt-3">
 						<div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
 							<div
-								className="h-1.5 rounded-full bg-gray-400 transition-all duration-500 ease-out dark:bg-gray-400"
+								className="h-1.5 rounded-full bg-gray-900 transition-all duration-500 ease-out dark:bg-white"
 								style={{ width: `${progressPct}%` }}
 							/>
 						</div>
