@@ -31,24 +31,12 @@ export function resolveAppMode(rawMode?: string | null): AppMode {
 	return "self-host";
 }
 
-export function canAccessScheduleInMode(appMode: AppMode): boolean {
-	return true;
-}
-
 export function canAccessPeopleInMode(appMode: AppMode): boolean {
 	return appMode !== "local";
 }
 
-export function canAccessProvidersInMode(_appMode: AppMode): boolean {
-	return true;
-}
-
 export function canConfigureRecurringScheduleInMode(appMode: AppMode): boolean {
 	return appMode !== "local";
-}
-
-export function canRunPromptsNowInMode(_appMode: AppMode): boolean {
-	return true;
 }
 
 export function shouldUseProxyInMode(appMode: AppMode): boolean {
