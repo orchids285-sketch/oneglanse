@@ -1,5 +1,7 @@
 # Contributing to OneGlanse
 
+I'm relatively new to open source — this is one of my first public projects. If you find something worth fixing or improving, I'd genuinely love a PR or even just an issue. Every bit of help makes this better.
+
 Thank you for your interest in contributing. OneGlanse is MIT-licensed and fully open source.
 
 ## Ways to Contribute
