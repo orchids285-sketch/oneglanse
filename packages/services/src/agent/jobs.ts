@@ -158,14 +158,14 @@ export async function submitAgentJobGroup(args: {
 			getWorkspaceById({ workspaceId }),
 		]);
 		prompts = loadedPrompts;
-		allowedProviders =
-			workspace.enabledProviders && workspace.enabledProviders.length > 0
-				? PROVIDER_LIST.filter((provider) =>
-						workspace.enabledProviders?.includes(
-							getAuthProviderForRuntimeProvider(provider),
-						),
-					)
-				: [...PROVIDER_LIST];
+		const { enabledProviders } = workspace;
+		allowedProviders = enabledProviders
+			? PROVIDER_LIST.filter((provider) =>
+					enabledProviders.includes(
+						getAuthProviderForRuntimeProvider(provider),
+					),
+				)
+			: [...PROVIDER_LIST];
 	} catch (err) {
 		throw new Error(`failed to load workspace prompts: ${toErrorMessage(err)}`);
 	}

@@ -11,10 +11,14 @@ import {
 	useResetAllProviders,
 } from "@/lib/provider-connections/client";
 import type { ProviderConnectionCard } from "@/lib/provider-connections/types";
+import { api } from "@/trpc/react";
 import { Button, toast } from "@oneglanse/ui";
 import { cn, getModelFavicon } from "@oneglanse/utils";
+import { AUTH_PROVIDER_LIST } from "@oneglanse/types";
+import type { AuthProvider } from "@oneglanse/types";
 import { CheckCircle2, Loader2, RotateCcw, RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 const CARD_ORDER: Array<ProviderConnectionCard["provider"]> = [
 	"google",
@@ -114,6 +118,7 @@ export function ProviderConnectionsPanel(props: {
 	nextHref?: string | null;
 	showSetupNotice?: boolean;
 	isSelfHost?: boolean;
+	workspaceId?: string | null;
 }) {
 	const {
 		title = "Providers",
@@ -121,9 +126,62 @@ export function ProviderConnectionsPanel(props: {
 		nextHref = null,
 		showSetupNotice = true,
 		isSelfHost = false,
+		workspaceId = null,
 	} = props;
 	const router = useRouter();
 	const authProvidersQuery = useProviderConnections();
+
+	const enabledProvidersQuery = api.workspace.getEnabledProviders.useQuery(
+		{ workspaceId: workspaceId! },
+		{ enabled: !!workspaceId },
+	);
+
+	// Local state for instant toggle feedback — synced from server on first load
+	const [localEnabled, setLocalEnabled] = useState<AuthProvider[] | null | undefined>(undefined);
+	const toggleDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	useEffect(() => {
+		if (localEnabled === undefined && enabledProvidersQuery.data !== undefined) {
+			setLocalEnabled(enabledProvidersQuery.data.enabledProviders ?? null);
+		}
+	}, [enabledProvidersQuery.data, localEnabled]);
+
+	const setEnabledMutation = api.workspace.setEnabledProviders.useMutation({
+		onError: () => {
+			// Revert to server state on error
+			setLocalEnabled(enabledProvidersQuery.data?.enabledProviders ?? null);
+			toast.error("Failed to update provider. Please try again.");
+		},
+	});
+
+	const isProviderEnabled = (provider: AuthProvider): boolean => {
+		const state = localEnabled !== undefined ? localEnabled : (enabledProvidersQuery.data?.enabledProviders ?? null);
+		return state === null || state.includes(provider);
+	};
+
+	const handleProviderToggle = (provider: AuthProvider) => {
+		if (!workspaceId) return;
+		const currentState = localEnabled !== undefined ? localEnabled : (enabledProvidersQuery.data?.enabledProviders ?? null);
+		const currentList = currentState === null ? ([...AUTH_PROVIDER_LIST] as AuthProvider[]) : currentState;
+		const currentlyEnabled = currentState === null || currentState.includes(provider);
+
+		let next: AuthProvider[] | null;
+		if (currentlyEnabled) {
+			const remaining = currentList.filter((p) => p !== provider);
+			next = remaining as AuthProvider[];
+		} else {
+			const nextList = [...currentList, provider] as AuthProvider[];
+			next = nextList.length === AUTH_PROVIDER_LIST.length ? null : nextList;
+		}
+
+		setLocalEnabled(next);
+
+		if (toggleDebounceRef.current) clearTimeout(toggleDebounceRef.current);
+		toggleDebounceRef.current = setTimeout(() => {
+			setEnabledMutation.mutate({ workspaceId, enabledProviders: next });
+		}, 300);
+	};
+
 	const providerActionMutation = useProviderConnectionAction({
 		onSuccess: (result, variables) => {
 			toast.success(
@@ -167,7 +225,7 @@ export function ProviderConnectionsPanel(props: {
 						</p>
 					) : null}
 
-					<div className="rounded-[calc(var(--app-radius)+0.1rem)] border border-gray-200/80 bg-white/50 p-3 dark:border-gray-800 dark:bg-white/[0.03]">
+					<div className="rounded-[calc(var(--app-radius)+0.1rem)] border border-gray-200/80 bg-white/50 p-4 sm:p-5 dark:border-gray-800 dark:bg-white/[0.03]">
 						<div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 							<div className="space-y-1">
 								<p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
@@ -187,7 +245,7 @@ export function ProviderConnectionsPanel(props: {
 								variant="ghost"
 								className={cn(
 									formSecondaryButtonClassName,
-									"w-full gap-2 border border-gray-200/80 bg-white/85 text-gray-600 dark:border-gray-700 dark:bg-white/5 dark:text-gray-300 sm:w-auto",
+									"gap-1.5 border border-gray-200/80 bg-white/85 text-gray-600 dark:border-gray-700 dark:bg-white/5 dark:text-gray-300",
 								)}
 								onClick={() => resetAllMutation.mutate()}
 								disabled={
@@ -277,7 +335,7 @@ export function ProviderConnectionsPanel(props: {
 				</p>
 			) : null}
 
-			<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+			<div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-3">
 				{cards.map((card) => {
 					const status = card.status;
 					const { isPendingForProvider, isPendingConnect, isPendingRefresh } =
@@ -298,22 +356,28 @@ export function ProviderConnectionsPanel(props: {
 						? "Connecting"
 						: "Connect";
 
+					const isEnabled = isProviderEnabled(card.provider);
+
 					return (
 						<div
 							key={card.provider}
 							className={cn(
-								"group relative overflow-hidden px-5 py-5 transition-[background-color,box-shadow,border-color,transform] duration-200 ease-out hover:-translate-y-0.5 sm:px-6 sm:py-5",
+								"group relative overflow-hidden px-4 py-4 transition-[background-color,box-shadow,border-color,transform] duration-200 ease-out hover:-translate-y-0.5 sm:px-5 sm:py-5",
 								getConnectionCardClasses(card),
 							)}
 						>
-							<div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-300/70 to-transparent dark:via-white/10" />
 							<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-								<div className="min-w-0 flex-1">
+								<div
+									className={cn(
+										"min-w-0 flex-1 transition-opacity duration-200",
+										!isEnabled && workspaceId ? "opacity-40" : "opacity-100",
+									)}
+								>
 									<div className="flex items-center gap-3">
 										<img
 											src={getModelFavicon(primaryProvider)}
 											alt={cardTitle}
-											className="h-7 w-7 shrink-0 rounded-[var(--app-radius)] sm:h-8 sm:w-8"
+											className="h-6 w-6 shrink-0 rounded-[var(--app-radius)] sm:h-7 sm:w-7"
 										/>
 
 										<div className="min-w-0">
@@ -321,12 +385,12 @@ export function ProviderConnectionsPanel(props: {
 												<span className="text-[10px] font-medium uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500">
 													Provider
 												</span>
-												<p className="truncate text-sm font-semibold tracking-[-0.02em] text-gray-900 sm:text-base dark:text-gray-100">
+												<p className="truncate text-sm font-semibold tracking-[-0.02em] text-gray-900 dark:text-gray-100">
 													{cardTitle}
 												</p>
 											</div>
 											{isConnected && !statusMessage ? (
-												<div className="mt-2 inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+												<div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
 													<CheckCircle2 className="h-3.5 w-3.5" />
 													Ready for prompt runs
 												</div>
@@ -377,10 +441,7 @@ export function ProviderConnectionsPanel(props: {
 										<Button
 											variant="ghost"
 											size="icon"
-											className={cn(
-												formSecondaryButtonClassName,
-												"size-11 rounded-[var(--app-radius)] p-0 text-gray-500 dark:text-gray-300",
-											)}
+											className="size-9 shrink-0 rounded-full border border-gray-200/80 bg-white p-0 text-gray-500 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_18px_-14px_rgba(15,23,42,0.12)] transition-all hover:bg-stone-100 hover:text-gray-950 hover:shadow-[0_1px_2px_rgba(15,23,42,0.08),0_16px_30px_-16px_rgba(15,23,42,0.22)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-300 dark:shadow-[0_1px_2px_rgba(0,0,0,0.14),0_10px_24px_-16px_rgba(0,0,0,0.4)] dark:hover:bg-gray-800 dark:hover:text-gray-100 dark:hover:shadow-[0_1px_2px_rgba(0,0,0,0.18),0_16px_30px_-16px_rgba(0,0,0,0.5)]"
 											onClick={() =>
 												providerActionMutation.mutate({
 													provider: card.provider,
@@ -392,11 +453,41 @@ export function ProviderConnectionsPanel(props: {
 											title={`Reconnect ${cardTitle}`}
 										>
 											{status.connecting || isPendingRefresh ? (
-												<Loader2 className="h-4 w-4 animate-spin" />
+												<Loader2 className="h-3.5 w-3.5 animate-spin" />
 											) : (
-												<RotateCw className="h-4 w-4" />
+												<RotateCw className="h-3.5 w-3.5" />
 											)}
 										</Button>
+									) : null}
+
+									{workspaceId ? (
+										<div className="ml-0.5 flex items-center gap-2">
+											<button
+												type="button"
+												role="switch"
+												aria-checked={isEnabled}
+												onClick={() => handleProviderToggle(card.provider)}
+												disabled={setEnabledMutation.isPending}
+												title={
+													isEnabled
+														? `Disable ${cardTitle}`
+														: `Enable ${cardTitle}`
+												}
+												className={cn(
+													"relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none disabled:cursor-not-allowed",
+													isEnabled
+														? "bg-emerald-500 dark:bg-emerald-600"
+														: "bg-gray-200 dark:bg-gray-700",
+												)}
+											>
+												<span
+													className={cn(
+														"pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+														isEnabled ? "translate-x-4" : "translate-x-0",
+													)}
+												/>
+											</button>
+										</div>
 									) : null}
 								</div>
 							</div>

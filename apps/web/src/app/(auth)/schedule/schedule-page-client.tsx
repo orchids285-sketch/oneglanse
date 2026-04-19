@@ -7,11 +7,10 @@ import {
 } from "@/components/forms/auth-form-chrome";
 import {
 	clearActiveProviderRun,
+	handleAgentRunResult,
 	persistActiveProviderRun,
-	showDisconnectedProvidersToast,
 } from "@/components/provider-run-toast";
 import { useSafeSearchParams } from "@/lib/navigation/use-safe-search-params";
-import { useProviderConnections } from "@/lib/provider-connections/client";
 import { api } from "@/trpc/react";
 import type { AppMode } from "@oneglanse/types";
 import {
@@ -340,8 +339,6 @@ export default function SchedulePageClient({
 	const workspaceId = initialWorkspaceId ?? searchParams.get("workspace") ?? "";
 	const canConfigureSchedule = canConfigureRecurringScheduleInMode(appMode);
 	const canRunNow = canRunPromptsNowInMode(appMode);
-	const providerConnectionsQuery = useProviderConnections();
-
 	const [selected, setSelected] = useState<string | null>(null);
 	const [saving, setSaving] = useState(false);
 	const [hasInitializedSelection, setHasInitializedSelection] = useState(false);
@@ -452,17 +449,11 @@ export default function SchedulePageClient({
 				toast.warning("No prompts configured for this workspace.");
 				return;
 			}
-			if (result.status === "no-providers") {
-				clearActiveProviderRun();
-				setIsRunning(false);
-				showDisconnectedProvidersToast({
-					disconnectedProviders:
-						result.disconnectedProviders.length > 0
-							? result.disconnectedProviders
-							: providerConnectionsQuery.data?.cards
-									.filter((card) => !card.status.connected)
-									.map((card) => card.displayName),
-				});
+			if (
+				!handleAgentRunResult(result, {
+					onDone: () => setIsRunning(false),
+				})
+			) {
 				return;
 			}
 			clearActiveProviderRun();

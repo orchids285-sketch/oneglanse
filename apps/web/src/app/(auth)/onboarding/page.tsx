@@ -8,11 +8,10 @@ import {
 } from "@/components/forms/auth-form-chrome";
 import {
 	clearActiveProviderRun,
+	handleAgentRunResult,
 	persistActiveProviderRun,
-	showDisconnectedProvidersToast,
 } from "@/components/provider-run-toast";
 import { useSafeSearchParams } from "@/lib/navigation/use-safe-search-params";
-import { useProviderConnections } from "@/lib/provider-connections/client";
 import { api } from "@/trpc/react";
 import {
 	Button,
@@ -82,7 +81,6 @@ export default function FirstWorkspaceOnboardingPage() {
 		{ workspaceId },
 		{ enabled: !!workspaceId },
 	);
-	const providerConnectionsQuery = useProviderConnections();
 	const storePrompts = api.prompt.store.useMutation();
 	const runAgent = api.agent.run.useMutation();
 
@@ -167,26 +165,14 @@ export default function FirstWorkspaceOnboardingPage() {
 		try {
 			await storePrompts.mutateAsync({ workspaceId, prompts });
 			const run = await runAgent.mutateAsync({ workspaceId });
-			if (run.status === "no-providers") {
-				setIsStartingRun(false);
-				clearActiveProviderRun();
-				showDisconnectedProvidersToast({
-					disconnectedProviders:
-						run.disconnectedProviders.length > 0
-							? run.disconnectedProviders
-							: providerConnectionsQuery.data?.cards
-									.filter((card) => !card.status.connected)
-									.map((card) => card.displayName),
-				});
+			if (
+				!handleAgentRunResult(run, {
+					onDone: () => setIsStartingRun(false),
+				})
+			) {
 				return;
 			}
-			const jobId = run?.jobId;
-			if (!jobId) {
-				setIsStartingRun(false);
-				clearActiveProviderRun();
-				toast.error("Prompts were saved, but the run could not be started.");
-				return;
-			}
+			const { jobId } = run;
 			persistActiveProviderRun({ workspaceId, jobId });
 			router.replace(`/dashboard?workspace=${workspaceId}&jobId=${jobId}`);
 		} catch {

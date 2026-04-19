@@ -4,7 +4,6 @@ import { useSafeSearchParams } from "@/lib/navigation/use-safe-search-params";
 import { api } from "@/trpc/react";
 import { PROVIDER_LIST, type Provider } from "@oneglanse/types";
 import { ProviderRunStatusCard, toast } from "@oneglanse/ui";
-import { getProviderDisplayName } from "@oneglanse/utils";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -69,21 +68,32 @@ export function clearActiveProviderRun(): void {
 	window.dispatchEvent(new Event(ACTIVE_PROVIDER_RUN_EVENT));
 }
 
-export function showDisconnectedProvidersToast(args: {
-	disconnectedProviders?: string[];
-}) {
-	const providers = (args.disconnectedProviders ?? [])
-		.filter(Boolean)
-		.map((provider) => getProviderDisplayName(provider));
-	const description =
-		providers.length > 0
-			? `Connect at least one provider to continue. Missing: ${providers.join(", ")}.`
-			: "Connect at least one provider to continue.";
+/**
+ * Handles all non-success agent run result states.
+ * Call this after every `api.agent.run.mutateAsync` call.
+ *
+ * Returns `true` if the run was queued successfully (caller should proceed).
+ * Returns `false` for all error/non-success states (caller should stop).
+ */
+export function handleAgentRunResult(
+	result: {
+		status: string;
+		jobId?: string | null;
+	},
+	options: {
+		/** Called when the result is not a successful queue. */
+		onDone: () => void;
+	},
+): result is { status: "queued"; jobId: string } {
+	const { onDone } = options;
 
-	toast.error("Providers are not connected.", {
-		id: PROVIDER_RUN_TOAST_ID,
-		description,
-	});
+	if (result.status !== "queued" || !result.jobId) {
+		clearActiveProviderRun();
+		onDone();
+		return false;
+	}
+
+	return true;
 }
 
 function ProviderRunToastCard({
