@@ -122,6 +122,14 @@ For VPS deployment, recurring scheduling, provider auth transfer, and all config
 
 ---
 
+## Contributing
+
+I'm relatively new to open source — this is one of my first public projects, and I'd genuinely love help from the community. Whether it's fixing a bug, adding a new provider, improving the docs, or just telling me what's confusing, please open an issue or a PR. Every contribution means a lot.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+
+---
+
 ## License
 
 MIT
