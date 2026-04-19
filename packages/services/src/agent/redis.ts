@@ -29,11 +29,16 @@ redis.on("error", (err) => {
 	Logger.error("Redis error", err);
 });
 
+let redisReadyLogged = false;
+
 export async function waitForRedis(): Promise<void> {
 	for (let i = 0; i < 10; i++) {
 		try {
 			await redis.ping();
-			Logger.info("Redis ready");
+			if (!redisReadyLogged) {
+				Logger.info("Redis ready");
+				redisReadyLogged = true;
+			}
 			return;
 		} catch {
 			Logger.info("Waiting for Redis...");

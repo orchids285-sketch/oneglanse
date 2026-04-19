@@ -73,16 +73,19 @@ export function SignupForm({
 			email: values.email,
 			password: values.password,
 			name: values.username,
-			callbackURL: postAuthRedirectPath,
 		});
 
 		if (error) {
-			toast.error(error.message ?? "Failed to sign up.");
-		} else {
-			toast.success("Signed up successfully!");
+			const message =
+				error.message?.toLowerCase().includes("already exists")
+					? "An account with this email already exists. Please sign in instead."
+					: (error.message ?? "Failed to sign up.");
+			toast.error(message);
+			setIsLoading(false);
+			return;
 		}
 
-		setIsLoading(false);
+		window.location.href = postAuthRedirectPath;
 	}
 
 	return (

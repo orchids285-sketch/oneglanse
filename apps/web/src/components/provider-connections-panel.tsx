@@ -76,15 +76,11 @@ function getConnectionStatusMessage(
 }
 
 function getConnectionCardClasses(card: ProviderConnectionCard): string {
-	if (card.status.connected) {
-		return `${formPanelClassName} bg-white shadow-[0_20px_60px_-32px_rgba(15,23,42,0.18)] hover:shadow-[0_20px_60px_-28px_rgba(15,23,42,0.22)] dark:bg-neutral-950 dark:shadow-[0_20px_60px_-32px_rgba(0,0,0,0.55)] dark:hover:shadow-[0_20px_60px_-28px_rgba(0,0,0,0.62)]`;
-	}
-
 	if (card.status.connecting) {
-		return `${formPanelClassName} bg-stone-50 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.18)] hover:shadow-[0_20px_60px_-28px_rgba(15,23,42,0.22)] dark:bg-neutral-900 dark:shadow-[0_20px_60px_-32px_rgba(0,0,0,0.55)] dark:hover:shadow-[0_20px_60px_-28px_rgba(0,0,0,0.62)]`;
+		return `${formPanelClassName} bg-stone-50 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.18)] dark:bg-neutral-900 dark:shadow-[0_20px_60px_-32px_rgba(0,0,0,0.55)]`;
 	}
 
-	return `${formPanelClassName} bg-white shadow-[0_20px_60px_-32px_rgba(15,23,42,0.18)] hover:shadow-[0_20px_60px_-28px_rgba(15,23,42,0.22)] dark:bg-neutral-950 dark:shadow-[0_20px_60px_-32px_rgba(0,0,0,0.55)] dark:hover:shadow-[0_20px_60px_-28px_rgba(0,0,0,0.62)]`;
+	return `${formPanelClassName} bg-white shadow-[0_20px_60px_-32px_rgba(15,23,42,0.18)] dark:bg-neutral-950 dark:shadow-[0_20px_60px_-32px_rgba(0,0,0,0.55)]`;
 }
 
 function getConnectionBadgeClasses(card: ProviderConnectionCard): string {
@@ -141,12 +137,20 @@ export function ProviderConnectionsPanel(props: {
 	const toggleDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => {
-		if (localEnabled === undefined && enabledProvidersQuery.data !== undefined) {
+		if (
+			localEnabled === undefined &&
+			enabledProvidersQuery.data !== undefined &&
+			!enabledProvidersQuery.isFetching
+		) {
 			setLocalEnabled(enabledProvidersQuery.data.enabledProviders ?? null);
 		}
-	}, [enabledProvidersQuery.data, localEnabled]);
+	}, [enabledProvidersQuery.data, enabledProvidersQuery.isFetching, localEnabled]);
 
+	const utils = api.useUtils();
 	const setEnabledMutation = api.workspace.setEnabledProviders.useMutation({
+		onSuccess: () => {
+			void utils.workspace.getEnabledProviders.invalidate({ workspaceId: workspaceId! });
+		},
 		onError: () => {
 			// Revert to server state on error
 			setLocalEnabled(enabledProvidersQuery.data?.enabledProviders ?? null);
@@ -362,7 +366,7 @@ export function ProviderConnectionsPanel(props: {
 						<div
 							key={card.provider}
 							className={cn(
-								"group relative overflow-hidden px-4 py-4 transition-[background-color,box-shadow,border-color,transform] duration-200 ease-out hover:-translate-y-0.5 sm:px-5 sm:py-5",
+								"group relative overflow-hidden px-4 py-4 transition-[background-color,box-shadow,border-color] duration-200 ease-out sm:px-5 sm:py-5",
 								getConnectionCardClasses(card),
 							)}
 						>
