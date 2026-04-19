@@ -495,7 +495,7 @@ export function ProviderConnectionsPanel(props: {
 						disabled={isAnyConnectionPending}
 						className={cn(
 							formSecondaryButtonClassName,
-							"h-auto border-transparent px-0 py-0 text-[11px] text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-gray-400 dark:hover:bg-transparent dark:hover:text-gray-200",
+							"h-10 border border-gray-200/80 bg-white px-3.5 text-[11px] text-gray-600 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_18px_-14px_rgba(15,23,42,0.12)] hover:bg-stone-50 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-300 dark:hover:bg-gray-900 dark:hover:text-gray-100",
 						)}
 					>
 						Skip for now
