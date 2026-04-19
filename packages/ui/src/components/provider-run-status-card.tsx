@@ -88,7 +88,7 @@ export function ProviderRunStatusCard(props: {
 						<img
 							src={getModelFavicon(provider)}
 							alt={title}
-							className="relative h-9 w-9 rounded-xl object-contain"
+							className="relative h-7 w-7 rounded-lg object-contain"
 						/>
 					</div>
 
