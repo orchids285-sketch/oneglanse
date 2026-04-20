@@ -118,6 +118,61 @@ function ManualRunView({
 	onRunNow: () => Promise<void>;
 	mode: "local" | "self-host";
 }) {
+	if (mode === "local") {
+		return (
+			<div className="flex flex-col gap-3">
+				<div className={cn(formPanelClassName, "flex items-center justify-between gap-4 px-5 py-5")}>
+					<div className="flex items-center gap-4">
+						<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10">
+							<PlayCircle className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+						</div>
+						<div className="space-y-0.5">
+							<h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+								Run prompts
+							</h2>
+							<p className="text-sm text-gray-500 dark:text-gray-400">
+								Run all providers and get fresh responses on demand.
+							</p>
+						</div>
+					</div>
+					<Button
+						onClick={() => void onRunNow()}
+						disabled={isRunning}
+						className="shrink-0"
+					>
+						{isRunning ? (
+							<>
+								<Loader2 className="h-4 w-4 animate-spin" />
+								Running…
+							</>
+						) : (
+							"Start run"
+						)}
+					</Button>
+				</div>
+
+				<div className={cn(formPanelClassName, "flex items-center justify-between gap-4 px-5 py-5 opacity-50")}>
+					<div className="flex items-center gap-4">
+						<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10">
+							<Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+						</div>
+						<div className="space-y-0.5">
+							<h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+								Recurring schedules
+							</h2>
+							<p className="text-sm text-gray-500 dark:text-gray-400">
+								Auto-run on a schedule. Available in self-host mode.
+							</p>
+						</div>
+					</div>
+					<span className="shrink-0 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-500 dark:border-gray-700 dark:text-gray-400">
+						Self-host
+					</span>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div
 			className={cn(
@@ -128,23 +183,14 @@ function ManualRunView({
 			<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-white/10">
 				<PlayCircle className="h-6 w-6 text-gray-500 dark:text-gray-400" />
 			</div>
-
-			<div className="space-y-2">
+			<div className="space-y-1.5">
 				<h2 className="text-base font-semibold tracking-[-0.02em] text-gray-900 sm:text-lg dark:text-gray-100">
 					Manual run
 				</h2>
-				<p className="text-sm leading-6 text-gray-500 dark:text-gray-400">
-					{mode === "local"
-						? "Start a fresh run whenever you want updated responses."
-						: "Trigger one immediate run without changing the recurring schedule."}
+				<p className="text-sm leading-5 text-gray-500 dark:text-gray-400">
+					Trigger one immediate run without changing the recurring schedule.
 				</p>
-				{mode === "local" ? (
-					<p className={cn(formHintClassName, "mt-1")}>
-						Recurring schedules are available in self-host mode.
-					</p>
-				) : null}
 			</div>
-
 			<Button
 				onClick={() => void onRunNow()}
 				disabled={isRunning}
@@ -476,7 +522,7 @@ export default function SchedulePageClient({
 	if (!canConfigureSchedule) {
 		return (
 			<div className="web-centered-state">
-				<div className="w-full max-w-xs">
+				<div className="w-full max-w-md">
 					<ManualRunView
 						isRunning={isRunning || runNowMutation.isPending}
 						onRunNow={handleRunNow}
