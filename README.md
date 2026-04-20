@@ -18,6 +18,60 @@ OneGlanse monitors how your brand appears inside real AI products — ChatGPT, G
 
 ---
 
+## Quick Start
+
+**Requirements:** Node.js 20+, pnpm 10+, Docker
+
+```bash
+git clone https://github.com/aryamantodkar/oneglanse
+cd oneglanse
+pnpm install
+cp .env.example .env
+```
+
+Open `.env` and set your LLM API key. This is the only value you must provide — everything else is auto-configured:
+
+```bash
+# Pick one:
+OPENAI_API_KEY=sk-...
+
+# or, to use Claude instead:
+ANTHROPIC_API_KEY=sk-ant-...
+ANALYSIS_LLM_PROVIDER=claude
+```
+
+Then start the app:
+
+```bash
+pnpm local
+```
+
+Opens at [http://localhost:3000](http://localhost:3000). On first run the script auto-generates secrets, starts Postgres / ClickHouse / Redis, runs migrations, and bootstraps the browser runtime. Sign up with email — Google OAuth is optional and not required.
+
+Once you're in, go to `/providers` to connect your AI provider accounts, then add prompts and run.
+
+---
+
+## Docs and Self-Hosting
+
+For VPS deployment, recurring scheduling, provider auth transfer, and all configuration options → **[docs.oneglanse.com](https://docs.oneglanse.com)**
+
+---
+
+## Features
+
+- **5 providers** — ChatGPT, Gemini, Perplexity, Claude, Google AI Overview
+- **UI-first capture** — browser automation against real product interfaces, not the API. What users see is what you get.
+- **GEO scoring** — visibility, sentiment, rank position, and recommendation type, tracked per prompt over time
+- **Competitor co-mentions** — see which brands appear alongside yours and how they're framed
+- **Citation tracking** — which domains and articles AI products are citing for your category
+- **AI perception analysis** — how models characterize your pricing, key claims, and brand positioning
+- **Your own LLM key** — response analysis uses your OpenAI or Anthropic key, called directly from your infrastructure
+- **ClickHouse analytics** — high-volume time-series storage built for prompt tracking at scale
+- **Self-hosted, free forever** — full stack deploys to any VPS with a single command
+
+---
+
 <img width="100%" alt="OneGlanse Dashboard" src="https://github.com/user-attachments/assets/d5438aff-67bc-4556-baa8-939906a59c02" />
 
 **Your overall GEO score, top competitor, rank position, and most-cited sources — in one view.** The dashboard shows your visibility score across all AI models, which competitor co-appears most often alongside your brand, your average rank position across all prompts, and which domains the AI products cite when your category comes up.
@@ -42,17 +96,20 @@ OneGlanse monitors how your brand appears inside real AI products — ChatGPT, G
 
 ---
 
-## Features
+## Why There Is No Cloud Version
 
-- **5 providers** — ChatGPT, Gemini, Perplexity, Claude, Google AI Overview
-- **UI-first capture** — browser automation against real product interfaces, not the API. What users see is what you get.
-- **GEO scoring** — visibility, sentiment, rank position, and recommendation type, tracked per prompt over time
-- **Competitor co-mentions** — see which brands appear alongside yours and how they're framed
-- **Citation tracking** — which domains and articles AI products are citing for your category
-- **AI perception analysis** — how models characterize your pricing, key claims, and brand positioning
-- **Your own LLM key** — response analysis uses your OpenAI or Anthropic key, called directly from your infrastructure
-- **ClickHouse analytics** — high-volume time-series storage built for prompt tracking at scale
-- **Self-hosted, free forever** — full stack deploys to any VPS with a single command
+OneGlanse is built around collecting responses from the real logged-in chat interfaces of ChatGPT, Gemini, Perplexity, Claude, and Google. That means the product depends on authenticated browser sessions tied to your own provider accounts.
+
+We do try to make logged-out collection work where possible, but logged-out sessions are materially worse for GEO tracking:
+
+- they are more likely to trigger bot detection or rate limits
+- they often return shorter, stripped-down answers
+- they frequently hide or reduce citations and source cards
+- they can gate richer UI features behind login
+
+That matters because GEO is not just about "did the model mention me". It is also about how your brand is framed, which competitors are shown beside you, and which sources the product actually surfaces to users. Logged-out experiences are often thinner and less representative of what real signed-in users see.
+
+That is why we do not offer a hosted cloud product with shared sessions. OneGlanse is designed to run with your own accounts, your own browser sessions, your own proxy setup when needed, and your own infrastructure. It is the more reliable and more accurate way to measure AI visibility without pretending API output or stripped-down logged-out pages are equivalent to the real user experience.
 
 ---
 
@@ -114,46 +171,6 @@ Without that proxy layer, provider access from a VPS is often unstable or blocke
 
 ---
 
-## Quick Start
-
-**Requirements:** Node.js 20+, pnpm 10+, Docker
-
-```bash
-git clone https://github.com/aryamantodkar/oneglanse
-cd oneglanse
-pnpm install
-cp .env.example .env
-```
-
-Open `.env` and set your LLM API key. This is the only value you must provide — everything else is auto-configured:
-
-```bash
-# Pick one:
-OPENAI_API_KEY=sk-...
-
-# or, to use Claude instead:
-ANTHROPIC_API_KEY=sk-ant-...
-ANALYSIS_LLM_PROVIDER=claude
-```
-
-Then start the app:
-
-```bash
-pnpm local
-```
-
-Opens at [http://localhost:3000](http://localhost:3000). On first run the script auto-generates secrets, starts Postgres / ClickHouse / Redis, runs migrations, and bootstraps the browser runtime. Sign up with email — Google OAuth is optional and not required.
-
-Once you're in, go to `/providers` to connect your AI provider accounts, then add prompts and run.
-
----
-
-## Self-Hosting
-
-For VPS deployment, recurring scheduling, provider auth transfer, and all configuration options → **[docs.oneglanse.com](https://docs.oneglanse.com)**
-
----
-
 ## Stack
 
 | Layer | Technology |
@@ -168,6 +185,14 @@ For VPS deployment, recurring scheduling, provider auth transfer, and all config
 
 ---
 
+## Contributing
+
+I'm relatively new to open source — this is one of my first public projects, and I'd genuinely love help from the community. Whether it's fixing a bug, adding a new provider, improving the docs, or just telling me what's confusing, please open an issue or a PR. Every contribution means a lot.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+
+---
+
 ## Acknowledgements
 
 | Project | Use | License |
@@ -179,14 +204,6 @@ For VPS deployment, recurring scheduling, provider auth transfer, and all config
 | [Drizzle ORM](https://github.com/drizzle-team/drizzle-orm) | TypeScript ORM | Apache-2.0 |
 | [Better Auth](https://github.com/better-auth/better-auth) | Authentication framework | MIT |
 | [Turndown](https://github.com/mixmark-io/turndown) | HTML to Markdown conversion | MIT |
-
----
-
-## Contributing
-
-I'm relatively new to open source — this is one of my first public projects, and I'd genuinely love help from the community. Whether it's fixing a bug, adding a new provider, improving the docs, or just telling me what's confusing, please open an issue or a PR. Every contribution means a lot.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
 
 ---
 
