@@ -16,16 +16,23 @@ OneGlanse monitors how your brand appears inside real AI products — ChatGPT, G
 
 [Docs](https://docs.oneglanse.com) · [oneglanse.com](https://oneglanse.com)
 
+The public surfaces are deployed separately:
+
+- `oneglanse.com` (landing site) is deployed on Vercel
+- `docs.oneglanse.com` (documentation) is deployed on Mintlify
+- the self-host flow in this repo deploys only the app runtime
+
 ---
 
 ## Quick Start
 
 **Requirements:** Node.js 20+, pnpm 10+, Docker
 
+If you don't have pnpm: `npm install -g pnpm@latest`
+
 ```bash
 git clone https://github.com/aryamantodkar/oneglanse
 cd oneglanse
-pnpm install
 cp .env.example .env
 ```
 
@@ -55,6 +62,8 @@ Once you're in, go to `/providers` to connect your AI provider accounts, then ad
 ## Docs and Self-Hosting
 
 For VPS deployment, recurring scheduling, provider auth transfer, and all configuration options → **[docs.oneglanse.com](https://docs.oneglanse.com)**
+
+The landing site is deployed separately on Vercel, and the docs are deployed separately on Mintlify. `pnpm self-host` is only for the app stack.
 
 ---
 
