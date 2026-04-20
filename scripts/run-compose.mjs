@@ -39,17 +39,6 @@ const PULLABLE_SERVICES = [
 
 function parseArgs(argv) {
 	const args = [...argv];
-	const stackIndex = args.indexOf("--stack");
-	if (stackIndex !== -1) {
-		const stack = args[stackIndex + 1] ?? "app";
-		if (stack !== "app") {
-			throw new Error(
-				`Unknown stack "${stack}". Self-hosting now deploys the app stack only.`,
-			);
-		}
-		args.splice(stackIndex, 2);
-	}
-
 	return {
 		composeArgs: args.length > 0 ? args : ["up", "-d", "--build"],
 	};

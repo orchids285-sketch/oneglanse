@@ -28,10 +28,11 @@ The public surfaces are deployed separately:
 
 **Requirements:** Node.js 20+, pnpm 10+, Docker
 
+If you don't have pnpm: `npm install -g pnpm@latest`
+
 ```bash
 git clone https://github.com/aryamantodkar/oneglanse
 cd oneglanse
-pnpm install
 cp .env.example .env
 ```
 

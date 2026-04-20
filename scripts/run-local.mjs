@@ -22,6 +22,7 @@ const localAppUrl = "http://localhost:3000";
 
 async function main() {
 	await ensureEnvFiles();
+	await runCommand("pnpm", ["install"]);
 	await ensureLocalCamoufoxRuntime();
 	await buildLocalWorkspacePackages();
 	const localEnv = buildLocalRuntimeEnv(localAppUrl);

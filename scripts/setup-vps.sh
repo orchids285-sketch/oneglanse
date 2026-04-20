@@ -142,16 +142,10 @@ set_env() {
   fi
 }
 
-ensure_secret() {
-  local key="$1" generator="$2" current=""
+needs_secret() {
+  local key="$1" current=""
   current="$(grep "^${key}=" .env | head -n1 | cut -d= -f2- || true)"
-  if [[ -n "$current" && "$current" != "replace-me" && "$current" != "changeme" ]]; then
-    return
-  fi
-
-  local generated
-  generated="$(eval "$generator")"
-  set_env "$key" "$generated"
+  [[ -z "$current" || "$current" == "replace-me" || "$current" == "changeme" ]]
 }
 
 set_env "APP_URL"      "https://${DOMAIN}"
@@ -167,8 +161,12 @@ else
 fi
 
 set_env "THORDATA_PROXY_API_URL" "$PROXY_URL"
-ensure_secret "BETTER_AUTH_SECRET" "openssl rand -hex 32"
-ensure_secret "INTERNAL_CRON_SECRET" "node -e \"console.log(require('node:crypto').randomUUID())\""
+if needs_secret "BETTER_AUTH_SECRET"; then
+  set_env "BETTER_AUTH_SECRET" "$(openssl rand -hex 32)"
+fi
+if needs_secret "INTERNAL_CRON_SECRET"; then
+  set_env "INTERNAL_CRON_SECRET" "$(node -e "console.log(require('node:crypto').randomUUID())")"
+fi
 
 success ".env configured"
 
