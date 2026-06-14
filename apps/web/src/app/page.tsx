@@ -9,7 +9,8 @@ export default async function Home(){
 	});
 
 	if (!session) {
-		return redirect("/login");
+		// Auth removed: transparently sign into the shared guest account.
+		return redirect("/api/guest-login");
 	}
 
 	const workspace = await getWorkspace();
