@@ -41,6 +41,15 @@ export const auth = betterAuth({
 	...(authBaseUrl ? { baseURL: authBaseUrl } : {}),
 	secret: authSecret,
 	socialProviders,
+	// The app is embedded in a cross-site iframe (FoundReach), so the session
+	// cookie must be SameSite=None; Secure or the browser drops it.
+	advanced: {
+		defaultCookieAttributes: {
+			sameSite: "none",
+			secure: true,
+			httpOnly: true,
+		},
+	},
 	emailAndPassword: {
 		enabled: true,
 	},
