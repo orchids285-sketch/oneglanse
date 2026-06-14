@@ -48,8 +48,14 @@ export async function GET(req: NextRequest) {
 	// only allow same-origin relative paths
 	const nextPath = nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : "/";
 
+	// Behind Render's proxy, req.url is the internal bind addr (0.0.0.0:10000).
+	// Build the redirect from the real public origin instead.
+	const proto = req.headers.get("x-forwarded-proto") ?? "https";
+	const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+	const publicBase = process.env.APP_URL ?? (host ? `${proto}://${host}` : req.url);
+
 	const signed = await signInGuest();
-	const redirect = NextResponse.redirect(new URL(nextPath, req.url));
+	const redirect = NextResponse.redirect(new URL(nextPath, publicBase));
 	if (signed) {
 		const setCookies =
 			(signed.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie?.() ??
