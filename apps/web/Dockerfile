@@ -50,4 +50,6 @@ USER node
 
 EXPOSE 3000
 
-CMD ["node", "apps/web/server.js"]
+# Run DB migrations (programmatic migrator, prod-deps only) then start the server.
+# Absolute paths so WORKDIR is irrelevant; migrate failure stops boot so it's visible.
+CMD ["sh", "-c", "cd /workspace && node packages/db/migrate-standalone.mjs && cd /app && exec node apps/web/server.js"]
