@@ -44,7 +44,8 @@ export default async function RootLayout({
 	});
 
 	if (!session) {
-		return redirect("/login");
+		// Auth removed: transparently route through the shared guest sign-in.
+		return redirect("/api/guest-login");
 	}
 
 	await trackUserActive(session.user.id);
