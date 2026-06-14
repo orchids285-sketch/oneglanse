@@ -21,8 +21,8 @@ type DisplayPhase = "pending" | "running" | "completed" | "failed" | "stopped";
 const PROVIDER_RUN_TOAST_ID = "provider-run-progress";
 const COMPLETION_TOAST_DURATION_MS = 1400;
 const STOPPED_HANDOFF_DELAY_MS = 350;
-const ACTIVE_PROVIDER_RUN_STORAGE_KEY = "oneglanse.active-provider-run";
-const ACTIVE_PROVIDER_RUN_EVENT = "oneglanse:active-provider-run";
+const ACTIVE_PROVIDER_RUN_STORAGE_KEY = "fr.active-provider-run";
+const ACTIVE_PROVIDER_RUN_EVENT = "fr:active-provider-run";
 
 type ActiveProviderRun = {
 	workspaceId: string;
