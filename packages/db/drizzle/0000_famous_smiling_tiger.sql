@@ -1,12 +1,8 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-CREATE EXTENSION IF NOT EXISTS "pg_cron";
-
-DO $$
-BEGIN
-	REVOKE USAGE ON SCHEMA cron FROM PUBLIC;
-	EXECUTE format('GRANT USAGE ON SCHEMA cron TO %I', current_user);
-END;
-$$;
+-- pg_cron + cron-schema grants removed for managed-Postgres (Render free tier,
+-- no shared_preload_libraries). pg_cron only drives the scheduled scraper, which
+-- requires the agent + residential proxy anyway; runtime cron.schedule calls are
+-- already guarded as best-effort/non-fatal (services/workspace/settings.ts).
 
 CREATE TABLE "account" (
 	"id" text PRIMARY KEY NOT NULL,
