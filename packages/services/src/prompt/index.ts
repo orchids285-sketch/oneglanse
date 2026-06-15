@@ -8,3 +8,5 @@ export {
 } from "./scheduler.js";
 export { storePromptResponses } from "./storePromptResponses.js";
 export { storePromptsForWorkspace } from "./storePromptsForWorkspace.js";
+export { generateResponsesViaApi } from "./generateResponsesViaApi.js";
+export { ensureClickHouseSchema } from "./ensureClickHouseSchema.js";

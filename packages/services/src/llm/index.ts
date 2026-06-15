@@ -17,7 +17,11 @@ function initOpenai(): ChatGptClient {
 		);
 	}
 
-	openaiClient = new ChatGptClient({ apiKey });
+	// baseURL lets us point the OpenAI-compatible client at Groq/OpenRouter/etc.
+	openaiClient = new ChatGptClient({
+		apiKey,
+		...(env.OPENAI_BASE_URL ? { baseURL: env.OPENAI_BASE_URL } : {}),
+	});
 	return openaiClient;
 }
 

@@ -14,14 +14,16 @@ const systemPrompt =
 async function runWithOpenAI(prompt: string, responseLength: number): Promise<string> {
 	let response;
 	try {
-		response = await chatgpt.responses.create({
-			model: "gpt-4.1",
+		// chat.completions is portable across OpenAI AND OpenAI-compatible
+		// providers (Groq/OpenRouter); the `responses` API is OpenAI-only.
+		response = await chatgpt.chat.completions.create({
+			model: env.OPENAI_MODEL ?? "gpt-4.1",
 			temperature: 0,
-			input: [
+			messages: [
 				{ role: "system", content: systemPrompt },
 				{ role: "user", content: prompt },
 			],
-			text: { format: { type: "json_object" } },
+			response_format: { type: "json_object" },
 		});
 	} catch (err) {
 		throw new ExternalServiceError(
@@ -32,7 +34,7 @@ async function runWithOpenAI(prompt: string, responseLength: number): Promise<st
 			err,
 		);
 	}
-	return response.output_text?.trim() || "";
+	return response.choices[0]?.message?.content?.trim() || "";
 }
 
 async function runWithClaude(prompt: string, responseLength: number): Promise<string> {
