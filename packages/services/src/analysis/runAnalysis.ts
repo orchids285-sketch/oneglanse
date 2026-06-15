@@ -12,29 +12,38 @@ const systemPrompt =
 	"If the brand is not mentioned in the response, return zeroed-out scores and empty arrays rather than fabricating data.";
 
 async function runWithOpenAI(prompt: string, responseLength: number): Promise<string> {
-	let response;
-	try {
-		// chat.completions is portable across OpenAI AND OpenAI-compatible
-		// providers (Groq/OpenRouter); the `responses` API is OpenAI-only.
-		response = await chatgpt.chat.completions.create({
-			model: env.OPENAI_MODEL ?? "gpt-4.1",
-			temperature: 0,
-			messages: [
-				{ role: "system", content: systemPrompt },
-				{ role: "user", content: prompt },
-			],
-			response_format: { type: "json_object" },
-		});
-	} catch (err) {
-		throw new ExternalServiceError(
-			"ChatGPT",
-			"Failed to analyze response.",
-			502,
-			{ responseLength },
-			err,
-		);
+	// chat.completions is portable across OpenAI AND OpenAI-compatible providers
+	// (Groq/OpenRouter); the `responses` API is OpenAI-only. Retry on transient
+	// failures (rate limits / TPM) — the analysis call is bigger than generation
+	// so it's the one that gets throttled.
+	let lastErr: unknown;
+	for (let attempt = 0; attempt < 3; attempt++) {
+		if (attempt > 0) {
+			await new Promise((r) => setTimeout(r, 1200 * attempt));
+		}
+		try {
+			const response = await chatgpt.chat.completions.create({
+				model: env.OPENAI_MODEL ?? "gpt-4.1",
+				temperature: 0,
+				messages: [
+					{ role: "system", content: systemPrompt },
+					{ role: "user", content: prompt },
+				],
+				response_format: { type: "json_object" },
+			});
+			const text = response.choices[0]?.message?.content?.trim() || "";
+			if (text) return text;
+		} catch (err) {
+			lastErr = err;
+		}
 	}
-	return response.choices[0]?.message?.content?.trim() || "";
+	throw new ExternalServiceError(
+		"ChatGPT",
+		"Failed to analyze response.",
+		502,
+		{ responseLength },
+		lastErr,
+	);
 }
 
 async function runWithClaude(prompt: string, responseLength: number): Promise<string> {
