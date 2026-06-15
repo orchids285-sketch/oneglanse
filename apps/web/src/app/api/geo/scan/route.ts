@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
 		prompts?: string[];
 		analyze?: boolean;
 		limit?: number;
+		offset?: number;
 	};
 	try {
 		console.log("[geo/scan] start ws=", workspace.id);
@@ -56,8 +57,15 @@ export async function POST(req: NextRequest) {
 				note: "Aucune requête suivie. Ajoute des prompts d'abord.",
 			});
 		}
-		// keep each request light for small dynos: cap how many we process
-		const prompts = all.slice(0, Math.max(1, Math.min(body.limit ?? 3, all.length)));
+		// keep each request light for small (512MB) dynos: process a small window.
+		// The UI loops offset 0,1,2,… (limit 1) so the dyno never does too much
+		// generation+analysis in a single request (2+ prompts OOM-crashes it).
+		const offset = Math.max(0, body.offset ?? 0);
+		const limit = Math.max(1, Math.min(body.limit ?? 1, 2));
+		const prompts = all.slice(offset, offset + limit);
+		if (prompts.length === 0) {
+			return NextResponse.json({ ok: true, total: all.length, processed: 0, done: true });
+		}
 
 		const gen = await generateResponsesViaApi({
 			workspaceId: workspace.id,
@@ -78,10 +86,13 @@ export async function POST(req: NextRequest) {
 			}
 		}
 
+		const nextOffset = offset + prompts.length;
 		return NextResponse.json({
 			ok: true,
-			prompts: all.length,
+			total: all.length,
 			processed: prompts.length,
+			nextOffset,
+			done: nextOffset >= all.length,
 			generated: gen.generated,
 			analysed,
 		});

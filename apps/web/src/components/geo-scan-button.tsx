@@ -13,19 +13,40 @@ export function GeoScanButton() {
 
 	async function scan() {
 		setBusy(true);
-		setMsg("");
+		setMsg("Scan en cours…");
+		// Process ONE prompt per request and loop (small free dynos OOM-crash if a
+		// single request generates+analyses several prompts). Stops when done.
+		let offset = 0;
+		let total = 0;
+		let processedAny = false;
 		try {
-			const r = await fetch("/api/geo/scan", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				// keep batches small so it stays light on modest hosts
-				body: JSON.stringify({ limit: 4 }),
-			}).then((x) => x.json());
-			if (r.ok) {
-				setMsg(`Scan terminé — ${r.generated} réponse(s) IA analysée(s).`);
-				router.refresh();
-			} else {
-				setMsg(r.note || r.error || "Échec du scan.");
+			for (let i = 0; i < 50; i++) {
+				const r = await fetch("/api/geo/scan", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ limit: 1, offset }),
+				})
+					.then((x) => x.json())
+					.catch(() => null);
+				if (!r) {
+					setMsg(processedAny ? "Scan interrompu — réessaie pour continuer." : "Échec du scan (réessaie).");
+					break;
+				}
+				if (!r.ok) {
+					setMsg(r.note || r.error || "Échec du scan.");
+					break;
+				}
+				total = r.total ?? total;
+				if (r.processed > 0) {
+					processedAny = true;
+					setMsg(`Scan… ${Math.min(offset + 1, total)}/${total} requêtes`);
+				}
+				offset = r.nextOffset ?? offset + 1;
+				if (r.done || r.processed === 0) {
+					setMsg(`Scan terminé — ${total} requête(s) analysée(s).`);
+					router.refresh();
+					break;
+				}
 			}
 		} catch {
 			setMsg("Échec du scan (réessaie).");
