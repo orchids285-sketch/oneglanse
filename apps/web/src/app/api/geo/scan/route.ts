@@ -4,7 +4,6 @@
 import { auth } from "@/lib/auth/auth";
 import { getWorkspace } from "@/lib/workspace/getWorkspace";
 import {
-	analysePromptsForWorkspace,
 	ensureClickHouseSchema,
 	fetchUserPromptsForWorkspace,
 	generateResponsesViaApi,
@@ -67,24 +66,13 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ ok: true, total: all.length, processed: 0, done: true });
 		}
 
+		// generate + analyse inline (one prompt's work — flat memory on small dynos)
 		const gen = await generateResponsesViaApi({
 			workspaceId: workspace.id,
 			userId: session.user.id,
 			prompts,
 		});
-		console.log("[geo/scan] generated", gen.generated);
-
-		let analysed = 0;
-		// analysis is the heavy step — only run when asked (defaults on)
-		if (body.analyze !== false) {
-			try {
-				await analysePromptsForWorkspace({ workspaceId: workspace.id, batchSize: 10 });
-				analysed = gen.generated;
-				console.log("[geo/scan] analyzed");
-			} catch (e) {
-				console.error("[geo/scan] analysis error:", (e as Error)?.message);
-			}
-		}
+		console.log("[geo/scan] generated", gen.generated, "analysed", gen.analysed);
 
 		const nextOffset = offset + prompts.length;
 		return NextResponse.json({
@@ -94,7 +82,7 @@ export async function POST(req: NextRequest) {
 			nextOffset,
 			done: nextOffset >= all.length,
 			generated: gen.generated,
-			analysed,
+			analysed: gen.analysed,
 		});
 	} catch (e) {
 		console.error("[geo/scan] FATAL:", (e as Error)?.message, (e as Error)?.stack?.slice(0, 300));
