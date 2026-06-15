@@ -1,6 +1,7 @@
 "use client";
 
 import { ExportMenu } from "@/components/export-menu";
+import { GeoScanButton } from "@/components/geo-scan-button";
 import { useSafeSearchParams } from "@/lib/navigation/use-safe-search-params";
 import { api } from "@/trpc/react";
 import type { AnalysisRecord } from "@oneglanse/types";
@@ -176,13 +177,24 @@ export default function Dashboard() {
 		!analysedPromptData ||
 		(Array.isArray(analysedPromptData) && analysedPromptData.length === 0)
 	) {
-		return <EmptyState workspaceId={workspaceId} />;
+		return (
+			<>
+				<EmptyState workspaceId={workspaceId} />
+				<GeoScanButton />
+			</>
+		);
 	}
 	if (!hasAnyAnalysisInWorkspace)
-		return <NoAnalysisState workspaceId={workspaceId} />;
+		return (
+			<>
+				<NoAnalysisState workspaceId={workspaceId} />
+				<GeoScanButton />
+			</>
+		);
 
 	return (
 		<div className="web-page-wide">
+			<GeoScanButton />
 			<div className="web-page-wide-inner">
 				<div className="ui-stagger space-y-5 sm:space-y-6">
 					{/* Filters */}
