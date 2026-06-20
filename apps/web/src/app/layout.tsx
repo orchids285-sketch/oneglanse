@@ -41,9 +41,9 @@ export default async function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>): Promise<React.JSX.Element> {
 	return (
-		<html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
+		<html lang="en" className={`${geist.variable} dark`} suppressHydrationWarning>
 			<body>
-				<ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+				<ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false}>
 					<TRPCReactProvider>
 						{children}
 						<Toaster />
