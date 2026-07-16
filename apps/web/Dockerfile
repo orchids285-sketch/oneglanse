@@ -15,8 +15,7 @@ COPY packages/types ./packages/types
 COPY packages/ui ./packages/ui
 COPY packages/utils ./packages/utils
 
-RUN --mount=type=cache,id=pnpm-store-web,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 FROM deps AS builder
 ENV SKIP_ENV_VALIDATION=true
@@ -40,8 +39,7 @@ RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
 WORKDIR /workspace
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY packages/db ./packages/db
-RUN --mount=type=cache,id=pnpm-store-web,target=/root/.local/share/pnpm/store \
-    pnpm install --prod --frozen-lockfile --filter @oneglanse/db...
+RUN pnpm install --prod --frozen-lockfile --filter @oneglanse/db...
 
 WORKDIR /app
 
