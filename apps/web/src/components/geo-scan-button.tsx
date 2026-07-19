@@ -98,7 +98,7 @@ export function GeoScanButton() {
 					boxShadow: "0 2px 10px rgba(0,0,0,.4)",
 				}}
 			>
-				{busy ? "Scan en cours…" : "↻ Lancer un scan IA"}
+				{busy ? "Scanning…" : "↻ Run AI scan"}
 			</button>
 		</div>
 	);

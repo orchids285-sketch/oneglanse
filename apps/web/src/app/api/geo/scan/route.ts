@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 		if (all.length === 0) {
 			return NextResponse.json({
 				ok: false,
-				note: "Aucune requête suivie. Ajoute des prompts d'abord.",
+				note: "No tracked queries yet. Add prompts first.",
 			});
 		}
 		// keep each request light for small (512MB) dynos: process a small window.
